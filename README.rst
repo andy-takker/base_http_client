@@ -32,10 +32,31 @@ Installing from github.com:
 
 .. code-block:: bash
 
-   pip3 install git+https://github.clm/andy-takker/
+   pip3 install git+https://github.clm/andy-takker/base_http_client
 
+The package contains several extras and you can install additional dependencies
+if you specify them in this way.
 
+For example, with msgspec_:
 
+.. code-block:: bash
+
+   pip3 install "base-http-client[msgspec]"
+
+Complete table of extras below:
+
++-----------------------------------------------+----------------------------------+
+| example                                       | description                      |
++===============================================+==================================+
+| ``pip3 install "base-http-client[msgspec]"``  | For using msgspec_ structs       |
++-----------------------------------------------+----------------------------------+
+| ``pip3 install "base-http-client[orjson]"``   | For fast parsing json by orjson_ |
++-----------------------------------------------+----------------------------------+
+| ``pip3 install "base-http-client[pydantic]"`` | For using pydantic_ models       |
++-----------------------------------------------+----------------------------------+
 
 .. _PyPI: https://pypi.org/
 .. _aiohttp: https://pypi.org/project/aiohttp/
+.. _msgspec: https://github.com/jcrist/msgspec
+.. _orjson: https://github.com/ijl/orjson
+.. _pydantic: https://github.com/pydantic/pydantic

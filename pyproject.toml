@@ -47,6 +47,8 @@ orjson = ["orjson"]
 pre-commit = "^3.7.1"
 mypy = "^1.10.1"
 ruff = "^0.5.2"
+restructuredtext-lint = "^1.4.0"
+pygments = "^2.18.0"
 
 [build-system]
 requires = ["poetry-core"]

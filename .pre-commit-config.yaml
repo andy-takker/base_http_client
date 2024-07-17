@@ -29,6 +29,10 @@ repos:
         args: [--fix]
       - id: ruff-format
 
+  - repo: meta
+    hooks:
+      - id: check-hooks-apply
+      - id: check-useless-excludes
 
   - repo: local
     hooks:
@@ -39,8 +43,9 @@ repos:
         language_version: python3.10
         require_serial: true
         pass_filenames: false
-
-  - repo: meta
-    hooks:
-      - id: check-hooks-apply
-      - id: check-useless-excludes
+      - id: rst
+        name: rst
+        entry: rst-lint --encoding utf-8
+        files: README.rst
+        language: python
+        additional_dependencies: [pygments, restructuredtext_lint]
