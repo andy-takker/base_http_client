@@ -7,10 +7,15 @@ develop:
 	.venv/bin/poetry install --all-extras
 	.venv/bin/pre-commit install
 
-lint-ci: ruff mypy  ##@Linting Run all linters in CI
+develop-ci:
+	pip install -U pip poetry
+	poetry config virtualenvs.create false
+	poetry install --all-extras
 
-ruff: ##@Linting Run ruff
-	.venv/bin/ruff check ./$(PROJECT_NAME)
+lint-ci: ruff-ci mypy-ci  ##@Linting Run all linters in CI
 
-mypy: ##@Linting Run mypy
-	.venv/bin/mypy ./$(PROJECT_NAME)
+ruff-ci: ##@Linting Run ruff
+	ruff check ./$(PROJECT_NAME)
+
+mypy-ci: ##@Linting Run mypy
+	mypy ./$(PROJECT_NAME) --config-file ./pyproject.toml

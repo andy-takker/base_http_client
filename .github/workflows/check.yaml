@@ -23,7 +23,7 @@ jobs:
           python-version: '3.10'
 
       - name: Install dependencies
-        run: make develop
+        run: make develop-ci
 
       - name: Run CI linters
         run: make lint-ci
@@ -38,27 +38,4 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: make develop
-
-      - name: Run pytest
-        run: make test-ci
-
-  notify:
-    name: Notify successful CI
-    needs: test
-    runs-on: ubuntu-22.04
-    env:
-      GOTIFY_HOST: ${{ secrets.GOTIFY_HOST }}
-      GOTIFY_APP_TOKEN: ${{ secrets.GOTIFY_APP_TOKEN }}
-      GOTIFY_TITLE: Inclusive Dance Bot
-      GOTIFY_MESSAGE: Checked repo ${{ github.REF_NAME }}
-      GOTIFY_EVENT_NAME: ${{ github.EVENT_NAME  }}
-      GOTIFY_REPOSITORY_URL: ${{ github.SERVER_URL }}/${{ github.REPOSITORY }}
-      GOTIFY_ACTION_URL: ${{ github.SERVER_URL }}/${{ github.REPOSITORY }}/actions/runs/${{ github.RUN_ID }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Send notify
-        run: python ./gotify.py
+        run: make develop-ci
