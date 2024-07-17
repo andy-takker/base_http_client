@@ -1,12 +1,32 @@
 [tool.poetry]
 name = "base-http-client"
-version = "0.1.0"
+version = "0.1.2"
 description = "Typical HTTP Client based on aiohttp"
 authors = ["Sergey Natalenko <sergey.natalenko@mail.ru>"]
 license = "MIT"
 homepage = "https://github.com/andy-takker/base_http_client"
 readme = "README.rst"
 keywords = ["aiohttp", "http", "client"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: AsyncIO",
+    "Framework :: Pytest",
+    "Framework :: aiohttp",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Internet",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development",
+]
 
 [tool.poetry.urls]
 "Source" = "https://github.com/andy-takker/base_http_client"
