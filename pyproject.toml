@@ -1,0 +1,48 @@
+[tool.poetry]
+name = "base-http-client"
+version = "0.1.0"
+description = "Typical HTTP Client based on aiohttp"
+authors = ["Sergey Natalenko <sergey.natalenko@mail.ru>"]
+license = "MIT"
+homepage = "https://github.com/andy-takker/base_http_client"
+readme = "README.rst"
+keywords = ["aiohttp", "http", "client"]
+
+[tool.poetry.urls]
+"Source" = "https://github.com/andy-takker/base_http_client"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+aiohttp = "^3.9.5"
+msgspec = {version = "^0.18.6", optional = true}
+orjson = {version = "^3.10.6", optional = true}
+pydantic = {version = "^2.8.2", optional = true}
+
+[tool.poetry.extras]
+msgspec = ["msgspec"]
+pydantic = ["pydantic"]
+orjson = ["orjson"]
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.7.1"
+mypy = "^1.10.1"
+ruff = "^0.5.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+plugins = ["pydantic.mypy"]
+check_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+ignore_missing_imports = false
+no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+module = [
+    "msgspec.*",
+    "orjson.*",
+]
+ignore_missing_imports = true
