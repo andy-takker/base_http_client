@@ -24,6 +24,15 @@ installation from a git repository directly.
 
 Installing from PyPI_:
 
+.. code-block:: bash
+
+   pip3 install base-http-client
+
+Installing from github.com:
+
+.. code-block:: bash
+
+   pip3 install git+https://github.clm/andy-takker/
 
 
 

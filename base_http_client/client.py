@@ -1,7 +1,6 @@
 from typing import Any, Literal
 
 from aiohttp import ClientSession
-from aiohttp.hdrs import METH_GET, METH_POST, METH_PUT, METH_DELETE
 from aiohttp.client import DEFAULT_TIMEOUT
 from yarl import URL
 
@@ -30,7 +29,7 @@ class BaseHttpClient:
 
     async def _make_req(
         self,
-        method: Literal[METH_GET, METH_POST, METH_PUT, METH_DELETE],
+        method: Literal["GET", "POST", "PUT", "DELETE"],
         url: URL,
         handlers: ResponseHandlersType,
         timeout: TimeoutType = DEFAULT_TIMEOUT,
