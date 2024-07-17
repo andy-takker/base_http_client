@@ -19,3 +19,6 @@ ruff-ci: ##@Linting Run ruff
 
 mypy-ci: ##@Linting Run mypy
 	mypy ./$(PROJECT_NAME) --config-file ./pyproject.toml
+
+rst-ci: ##@Linting Run rst-lint
+	rst-lint --encoding utf-8 README.rst
