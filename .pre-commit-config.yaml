@@ -36,7 +36,7 @@ repos:
         name: mypy
         entry: mypy ./base_http_client --config-file ./pyproject.toml
         language: python
-        language_version: python3.11
+        language_version: python3.10
         require_serial: true
         pass_filenames: false
 

@@ -8,7 +8,7 @@ from aiohttp import ClientResponse
 try:
     import orjson as json
 except ImportError:
-    import json
+    import json  # type: ignore
 
 
 def json_parser(
