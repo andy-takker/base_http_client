@@ -4,7 +4,7 @@ from typing import Any
 
 from aiohttp import ClientResponse
 
-from ..exceptions import UnhandledStatus
+from base_http_client.exceptions import UnhandledStatus
 
 ResponseHandlersType = Mapping[HTTPStatus | int | str, Callable]
 
