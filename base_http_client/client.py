@@ -4,7 +4,7 @@ from aiohttp import ClientSession
 from aiohttp.client import DEFAULT_TIMEOUT
 from yarl import URL
 
-from .handlers.base import (
+from base_http_client.handlers.base import (
     ResponseHandlersType,
     apply_handler,
 )

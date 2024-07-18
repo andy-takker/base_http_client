@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "base-http-client"
-version = "0.1.2"
+version = "0.2.0"
 description = "Typical HTTP Client based on aiohttp"
 authors = ["Sergey Natalenko <sergey.natalenko@mail.ru>"]
 license = "MIT"
@@ -26,6 +26,10 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Software Development :: Libraries",
     "Topic :: Software Development",
+]
+packages = [
+    { include = "base_http_client" },
+    { include = "test_http_server" },
 ]
 
 [tool.poetry.urls]
