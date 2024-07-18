@@ -55,6 +55,12 @@ Complete table of extras below:
 | ``pip3 install "base-http-client[pydantic]"`` | For using pydantic_ models       |
 +-----------------------------------------------+----------------------------------+
 
+Using
+~~~~~
+
+
+
+
 .. _PyPI: https://pypi.org/
 .. _aiohttp: https://pypi.org/project/aiohttp/
 .. _msgspec: https://github.com/jcrist/msgspec

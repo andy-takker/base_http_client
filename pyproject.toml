@@ -29,7 +29,7 @@ classifiers = [
 ]
 packages = [
     { include = "base_http_client" },
-    { include = "test_http_server" },
+    { include = "test_http_service" },
 ]
 
 [tool.poetry.urls]
