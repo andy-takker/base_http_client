@@ -16,14 +16,14 @@ jobs:
     needs: check
     uses: ./.github/workflows/_test.yaml
 
-  build:
-    name: Build dists
-    needs: test
-    uses: ./.github/workflows/_build.yaml
+  # build:
+  #   name: Build dists
+  #   needs: test
+  #   uses: ./.github/workflows/_build.yaml
 
   publish:
     name: Publish package to PyPI and make release on Github
-    needs: build
+    needs: test
     uses: ./.github/workflows/_publish.yaml
     permissions:
       id-token: write
