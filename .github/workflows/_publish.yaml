@@ -67,9 +67,15 @@ jobs:
             ./dist/*.tar.gz
             ./dist/*.whl
 
-      - name: Upload artifact signatures to Github Release
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: >-
-          gh release upload '${{ github.ref_name }}' dist/**
-          --repo '${{ github.repository }}'
+      - name: Create Github release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          draft: false
+          prerelease: false
+          name: ${{ github.ref_name }}
+          body_path: changelog.md
+          files: |
+            dist/*
+
