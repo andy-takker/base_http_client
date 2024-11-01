@@ -27,12 +27,6 @@ jobs:
           verbose: true
           skip-existing: true
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: python-package-dist
-          path: dist/
-
   github-release:
     name: >-
       Sign the Python distribution with Sigstore
