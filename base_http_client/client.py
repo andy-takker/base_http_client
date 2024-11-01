@@ -29,7 +29,7 @@ class BaseHttpClient:
 
     async def _make_req(
         self,
-        method: Literal["GET", "POST", "PUT", "DELETE"],
+        method: Literal["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD"],
         url: URL,
         handlers: ResponseHandlersType,
         timeout: TimeoutType = DEFAULT_TIMEOUT,
