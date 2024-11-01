@@ -2,7 +2,11 @@ from aiohttp import ClientError
 from yarl import URL
 
 
-class UnhandledStatus(ClientError, KeyError):
+class BaseHttpClientException(ClientError):
+    pass
+
+
+class UnhandledStatusException(BaseHttpClientException, KeyError):
     status: int
     url: URL
     client_name: str | None

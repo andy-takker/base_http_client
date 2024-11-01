@@ -1,13 +1,55 @@
-name: Publish Python distribution to PyPI and TestPyPI
+name: Publish Python distribution to PyPI and make release on Github
 
 on:
   workflow_call:
 
 jobs:
-
-  publish:
-    name: Publish distribution
+  publish-to-pypi:
+    name: Publish Python distribution to PyPI
     runs-on: ubuntu-22.04
+    environment:
+      name: pypi
+      url: https://pypi.org/p/base-http-client/
+    permissions:
+      id-token: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-dist
+          path: dist/
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  github-release:
+    name: >-
+      Sign the Python distribution with Sigstore
+      and upload them to Github Release
+    needs:
+      - publish-to-pypi
+    runs-on: ubuntu-22.04
+
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Download distribution
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-dist
+          path: dist/
+
+      - name: Sign the dists with Sigstore
+        uses: sigstore/gh-action-sigstore-python@v3.0.0
+        with:
+          inputs: >-
+            ./dist/*.tar.gz
+            ./dist/*.whl
+
+      - name: Upload artifact signatures to Github Release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          gh release upload '${{ github.ref_name }}' dist/**
+          --repo '${{ github.repository }}'

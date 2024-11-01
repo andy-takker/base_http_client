@@ -22,6 +22,7 @@ jobs:
     uses: ./.github/workflows/_build.yaml
 
   publish:
-    name: Release
+    name: Publish package to PyPI and make release on Github
     needs: build
     uses: ./.github/workflows/_publish.yaml
+    if: startsWith(github.ref_name, 'refs/tags/')

@@ -4,7 +4,7 @@ from typing import Any
 
 from aiohttp import ClientResponse
 
-from base_http_client.exceptions import UnhandledStatus
+from base_http_client.exceptions import UnhandledStatusException
 
 ResponseHandlersType = Mapping[HTTPStatus | int | str, Callable]
 
@@ -16,7 +16,7 @@ async def apply_handler(
 ) -> Any:
     handler = _find_handler(handlers=handlers, status=response.status)
     if not handler:
-        raise UnhandledStatus(
+        raise UnhandledStatusException(
             f"Unexpected resposne {response.status} from {response.url}",
             status=response.status,
             url=response.url,
