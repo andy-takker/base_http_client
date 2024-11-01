@@ -32,7 +32,7 @@ Installing from github.com:
 
 .. code-block:: bash
 
-   pip3 install git+https://github.clm/andy-takker/base_http_client
+   pip3 install git+https://github.com/andy-takker/base_http_client
 
 The package contains several extras and you can install additional dependencies
 if you specify them in this way.
