@@ -75,7 +75,7 @@ jobs:
           draft: false
           prerelease: false
           name: ${{ github.ref_name }}
-          body_path: changelog.md
+          body: Release new version of package and publish to PyPI v${{ github.ref_name }}
           files: |
             dist/*
 
