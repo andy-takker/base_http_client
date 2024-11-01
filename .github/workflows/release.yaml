@@ -16,66 +16,15 @@ jobs:
     needs: check
     uses: ./.github/workflows/_test.yaml
 
-  publish-to-pypi:
-    name: Publish Python distribution to PyPI
-    runs-on: ubuntu-22.04
-    # if: github.repository == 'andy-takker/base-http-client'
-    environment:
-      name: pypi
-      url: https://pypi.org/p/base-http-client/
+  # build:
+  #   name: Build dists
+  #   needs: test
+  #   uses: ./.github/workflows/_build.yaml
+
+  publish:
+    name: Publish package to PyPI and make release on Github
+    needs: test
+    uses: ./.github/workflows/_publish.yaml
     permissions:
       id-token: write
       contents: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Install dependencies
-        run: make develop-ci
-
-      - name: Build distribution
-        run: poetry build
-
-      - name: Publish distribution to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1.10
-        with:
-          verbose: true
-          skip-existing: true
-
-  github-release:
-    name: >-
-      Sign the Python distribution with Sigstore
-      and upload them to Github Release
-    needs:
-      - publish-to-pypi
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: write
-      id-token: write
-
-    steps:
-      - name: Download distribution
-        uses: actions/download-artifact@v4
-        with:
-          name: python-package-dist
-          path: dist/
-
-      - name: Sign the dists with Sigstore
-        uses: sigstore/gh-action-sigstore-python@v3.0.0
-        with:
-          inputs: >-
-            ./dist/*.tar.gz
-            ./dist/*.whl
-
-      - name: Upload artifact signatures to Github Release
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: >-
-          gh release upload '${{ github.ref_name }}' dist/**
-          --repo '${{ github.repository }}'
-
