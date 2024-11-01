@@ -49,9 +49,9 @@ pydantic = ["pydantic"]
 orjson = ["orjson"]
 
 [tool.poetry.group.dev.dependencies]
-pre-commit = "^3.7.1"
+pre-commit = ">=3.7.1,<5.0.0"
 mypy = "^1.10.1"
-ruff = "^0.5.2"
+ruff = ">=0.5.2,<0.8.0"
 restructuredtext-lint = "^1.4.0"
 pygments = "^2.18.0"
 pytest = "^8.3.3"
