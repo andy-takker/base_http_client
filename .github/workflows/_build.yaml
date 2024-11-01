@@ -1,12 +1,10 @@
-name: Publish Python distribution to PyPI and TestPyPI
+name: Build Python distribution
 
 on:
   workflow_call:
-  push:
-    branches:
-      - master
 
 jobs:
+
   build:
     name: Build distribution
     runs-on: ubuntu-22.04
@@ -28,5 +26,5 @@ jobs:
       - name: Store the distribution packages
         uses: actions/upload-artifact@v4
         with:
-          name: python-package-distributions
+          name: python-package-dist
           path: dist/

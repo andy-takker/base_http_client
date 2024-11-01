@@ -1,0 +1,28 @@
+name: Release new version of package and publish to PyPI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+jobs:
+  check:
+    name: Lint code and check format
+    uses: ./.github/workflows/_check.yaml
+
+  test:
+    name: Run tests
+    needs: check
+    uses: ./.github/workflows/_test.yaml
+
+  build:
+    name: Build dists
+    needs: test
+    uses: ./.github/workflows/_build.yaml
+
+  publish:
+    name: Publish package to PyPI and make release on Github
+    needs: build
+    uses: ./.github/workflows/_publish.yaml
+    if: startsWith(github.ref_name, 'refs/tags/')
