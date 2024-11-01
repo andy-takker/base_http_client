@@ -15,19 +15,11 @@ jobs:
       id-token: write
       contents: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v5
+      - name: Download distribution
+        uses: actions/download-artifact@v4
         with:
-          python-version: '3.10'
-
-      - name: Install dependencies
-        run: make develop-ci
-
-      - name: Build distribution
-        run: poetry build
+          name: python-package-dist
+          path: dist/
 
       - name: Publish distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1.10
