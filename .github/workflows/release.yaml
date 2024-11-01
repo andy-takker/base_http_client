@@ -26,3 +26,6 @@ jobs:
     needs: build
     uses: ./.github/workflows/_publish.yaml
     if: startsWith(github.ref_name, 'refs/tags/')
+    permissions:
+      id-token: write
+      contents: write
