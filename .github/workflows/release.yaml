@@ -3,8 +3,8 @@ name: Release new version of package and publish to PyPI
 on:
   workflow_dispatch:
   push:
-    branches:
-      - master
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
   check:
@@ -25,7 +25,6 @@ jobs:
     name: Publish package to PyPI and make release on Github
     needs: build
     uses: ./.github/workflows/_publish.yaml
-    if: startsWith(github.ref, 'refs/tags/')
     permissions:
       id-token: write
       contents: write

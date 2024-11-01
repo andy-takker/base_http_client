@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "base-http-client"
-version = "0.2.2"
+version = "0.2.3"
 description = "Typical HTTP Client based on aiohttp"
 authors = ["Sergey Natalenko <sergey.natalenko@mail.ru>"]
 license = "MIT"
