@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "base-http-client"
-version = "0.2.0"
+version = "0.2.1"
 description = "Typical HTTP Client based on aiohttp"
 authors = ["Sergey Natalenko <sergey.natalenko@mail.ru>"]
 license = "MIT"
@@ -21,6 +21,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Internet",
     "Topic :: Internet :: WWW/HTTP",
     "Topic :: Software Development :: Libraries :: Python Modules",
@@ -53,6 +54,7 @@ mypy = "^1.10.1"
 ruff = "^0.5.2"
 restructuredtext-lint = "^1.4.0"
 pygments = "^2.18.0"
+pytest = "^8.3.3"
 
 [build-system]
 requires = ["poetry-core"]
