@@ -7,7 +7,21 @@ on:
       - master
 
 jobs:
-  release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+  check:
+    name: Lint code and check format
+    uses: ./.github/workflows/_check.yaml
+
+  test:
+    name: Run tests
+    needs: check
+    uses: ./.github/workflows/_test.yaml
+
+  build:
+    name: Build dists
+    needs: test
+    uses: ./.github/workflows/_build.yaml
+
+  publish:
+    name: Release
+    needs: build
+    uses: ./.github/workflows/_publish.yaml
