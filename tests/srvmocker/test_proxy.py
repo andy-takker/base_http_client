@@ -1,6 +1,7 @@
 import warnings
 from http import HTTPStatus
 from types import MappingProxyType
+from typing import Any
 
 import pytest
 from aiohttp import BasicAuth, ClientSession, hdrs, web
@@ -267,6 +268,42 @@ async def test_client_proxy_auth_keeps_explicit_proxy_authorization_header() -> 
 
 async def test_client_proxy_auth_keeps_explicit_mixed_proxy_headers() -> None:
     auth = BasicAuth("user", "secret")
+
+    class InspectClient(_Client):
+        seen: dict[str, Any]
+
+        async def _request_once(self, **kwargs: Any) -> Any:  # type: ignore[override]
+            self.seen = kwargs
+            return {"ok": True}
+
+    async with ClientSession() as session:
+        client = InspectClient(
+            url="http://127.0.0.1/",
+            session=session,
+            client_name="test",
+        )
+        result = await client._make_req(
+            method=hdrs.METH_GET,
+            url=client.url / "x",
+            handlers=_Client.HANDLERS,
+            proxy="http://127.0.0.1:1",
+            proxy_auth=BasicAuth("wrong", "wrong"),
+            proxy_headers={
+                "Proxy-Authorization": auth.encode(),
+                "Authorization": "Bearer origin",
+            },
+        )
+
+    assert result == {"ok": True}
+    proxy_headers = client.seen["proxy_headers"]
+    headers = client.seen["headers"]
+    assert proxy_headers["Proxy-Authorization"] == auth.encode()
+    assert proxy_headers["Authorization"] == "Bearer origin"
+    assert headers["Proxy-Authorization"] == auth.encode()
+
+
+async def test_client_proxy_auth_keeps_explicit_request_proxy_authorization() -> None:
+    auth = BasicAuth("user", "secret")
     routes = [MockRoute("GET", "/x", "ok")]
     async with start_service(routes) as target:
         target.register("ok", JsonResponse({"ok": True}))
@@ -279,10 +316,7 @@ async def test_client_proxy_auth_keeps_explicit_mixed_proxy_headers() -> None:
                     handlers=_Client.HANDLERS,
                     proxy=proxy.url,
                     proxy_auth=BasicAuth("wrong", "wrong"),
-                    proxy_headers={
-                        "Proxy-Authorization": auth.encode(),
-                        "Authorization": "Bearer origin",
-                    },
+                    headers={"Proxy-Authorization": auth.encode()},
                 )
 
     assert result == {"ok": True}

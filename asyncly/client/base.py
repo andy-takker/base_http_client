@@ -129,10 +129,10 @@ class BaseHttpClient:
         Raises:
             UnhandledStatusException: If no handler matches the response status.
         """
-        _normalize_auth_kwargs(kwargs, self._proxy_auth)
-
         if "proxy" not in kwargs and self._proxy is not None:
             kwargs["proxy"] = self._proxy
+
+        _normalize_auth_kwargs(kwargs, self._proxy_auth, url=url)
 
         if retry is None:
             return await self._request_once(
@@ -255,7 +255,7 @@ class BaseHttpClient:
 
 
 def _normalize_auth_kwargs(
-    kwargs: dict[str, Any], default_proxy_auth: BasicAuth | None
+    kwargs: dict[str, Any], default_proxy_auth: BasicAuth | None, *, url: URL
 ) -> None:
     auth = kwargs.pop("auth", None)
     if auth is not None:
@@ -276,12 +276,35 @@ def _normalize_auth_kwargs(
     proxy_headers = CIMultiDict(kwargs.get("proxy_headers") or {})
     if any(key.lower() == "proxy-authorization" for key in proxy_headers):
         kwargs["proxy_headers"] = proxy_headers
+        _add_plain_http_proxy_auth_header(kwargs, url=url)
         return
     encoded = encode_basic_auth(
         proxy_auth.login, proxy_auth.password, proxy_auth.encoding
     )
     proxy_headers["Proxy-Authorization"] = encoded
     kwargs["proxy_headers"] = proxy_headers
+    _add_plain_http_proxy_auth_header(kwargs, url=url)
+
+
+def _add_plain_http_proxy_auth_header(kwargs: dict[str, Any], *, url: URL) -> None:
+    if url.scheme != "http" or kwargs.get("proxy") is None:
+        return
+    headers = CIMultiDict(kwargs.get("headers") or {})
+    if any(key.lower() == "proxy-authorization" for key in headers):
+        kwargs["headers"] = headers
+        return
+    proxy_headers = kwargs.get("proxy_headers") or {}
+    proxy_authorization = None
+    for key, value in proxy_headers.items():
+        if key.lower() == "proxy-authorization":
+            proxy_authorization = value
+            break
+    if proxy_authorization is None:
+        return
+    # aiohttp 3.14 drops proxy_headers for plain HTTP proxies; this reaches
+    # the proxy without affecting HTTPS CONNECT tunnels.
+    headers["Proxy-Authorization"] = proxy_authorization
+    kwargs["headers"] = headers
 
 
 class _ObservableTransportError(Exception):
