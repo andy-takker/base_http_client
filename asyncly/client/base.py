@@ -17,7 +17,6 @@ from aiohttp.client import DEFAULT_TIMEOUT
 from multidict import CIMultiDict
 from yarl import URL
 
-
 from asyncly.client.handlers.base import (
     ResponseHandlersType,
     apply_handler,
@@ -276,15 +275,28 @@ def _normalize_auth_kwargs(
         kwargs["headers"] = headers
 
     proxy_auth = kwargs.pop("proxy_auth", default_proxy_auth)
-    if proxy_auth is None:
+    request_headers = CIMultiDict(kwargs.get("headers") or {})
+    explicit_proxy_authorization = next(
+        (
+            value
+            for key, value in request_headers.items()
+            if key.lower() == "proxy-authorization"
+        ),
+        None,
+    )
+    if proxy_auth is None and explicit_proxy_authorization is None:
+        return
+    proxy_headers = CIMultiDict(kwargs.get("proxy_headers") or {})
+    if explicit_proxy_authorization is not None:
+        proxy_headers["Proxy-Authorization"] = explicit_proxy_authorization
+        proxy_headers.popall("Authorization", None)
+        kwargs["proxy_headers"] = proxy_headers
+        _add_proxy_auth_middleware(kwargs)
         return
     if not isinstance(proxy_auth, BasicAuth):
         raise TypeError("proxy_auth must be an aiohttp.BasicAuth")
-    proxy_headers = CIMultiDict(kwargs.get("proxy_headers") or {})
     if any(key.lower() == "proxy-authorization" for key in proxy_headers):
-        for key in list(proxy_headers):
-            if key.lower() == "authorization":
-                del proxy_headers[key]
+        proxy_headers.popall("Authorization", None)
         kwargs["proxy_headers"] = proxy_headers
         _add_proxy_auth_middleware(kwargs)
         return
