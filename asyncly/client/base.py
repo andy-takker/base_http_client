@@ -275,6 +275,8 @@ def _normalize_auth_kwargs(
         kwargs["headers"] = headers
 
     proxy_auth = kwargs.pop("proxy_auth", default_proxy_auth)
+    if proxy_auth is not None and not isinstance(proxy_auth, BasicAuth):
+        raise TypeError("proxy_auth must be an aiohttp.BasicAuth")
     request_headers = CIMultiDict(kwargs.get("headers") or {})
     explicit_proxy_authorization = next(
         (
@@ -293,8 +295,6 @@ def _normalize_auth_kwargs(
         kwargs["proxy_headers"] = proxy_headers
         _add_proxy_auth_middleware(kwargs)
         return
-    if not isinstance(proxy_auth, BasicAuth):
-        raise TypeError("proxy_auth must be an aiohttp.BasicAuth")
     if any(key.lower() == "proxy-authorization" for key in proxy_headers):
         proxy_headers.popall("Authorization", None)
         kwargs["proxy_headers"] = proxy_headers

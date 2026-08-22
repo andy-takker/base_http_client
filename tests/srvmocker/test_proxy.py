@@ -362,6 +362,14 @@ async def test_client_proxy_auth_rejects_non_basic_auth() -> None:
                 handlers=_Client.HANDLERS,
                 proxy_auth=object(),
             )
+        with pytest.raises(TypeError, match="proxy_auth must be an aiohttp.BasicAuth"):
+            await client._make_req(
+                method=hdrs.METH_GET,
+                url=client.url / "x",
+                handlers=_Client.HANDLERS,
+                proxy_auth=object(),
+                headers={"Proxy-Authorization": "Basic explicit"},
+            )
 
 
 async def test_proxy_auth_missing_returns_407() -> None:
