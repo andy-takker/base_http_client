@@ -300,6 +300,7 @@ def _normalize_auth_kwargs(
         kwargs["proxy_headers"] = proxy_headers
         _add_proxy_auth_middleware(kwargs)
         return
+    assert proxy_auth is not None
     encoded = _encode_basic_auth(
         proxy_auth.login, proxy_auth.password, proxy_auth.encoding
     )
