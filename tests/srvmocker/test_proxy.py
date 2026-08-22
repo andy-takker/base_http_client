@@ -229,17 +229,25 @@ async def test_client_proxy_auth_is_not_sent_as_origin_authorization() -> None:
     routes = [MockRoute("GET", "/x", "ok")]
     async with start_service(routes) as target:
         target.register("ok", JsonResponse({"ok": True}))
-        async with ClientSession() as session:
-            client = _Client(url=target.url, session=session, client_name="test")
-            result = await client._make_req(
-                method=hdrs.METH_GET,
-                url=target.url / "x",
-                handlers=_Client.HANDLERS,
-                proxy_auth=auth,
-            )
+        async with start_proxy(auth=auth) as proxy:
+            async with ClientSession() as session:
+                client = _Client(url=target.url, session=session, client_name="test")
+                result = await client._make_req(
+                    method=hdrs.METH_GET,
+                    url=target.url / "x",
+                    handlers=_Client.HANDLERS,
+                    proxy=proxy.url,
+                    proxy_auth=auth,
+                )
 
     assert result == {"ok": True}
-    assert "Authorization" not in target.last_call("ok").headers
+    proxy.assert_called(
+        times=1,
+        headers={"Proxy-Authorization": auth.encode()},
+    )
+    target_headers = target.last_call("ok").headers
+    assert "Authorization" not in target_headers
+    assert "Proxy-Authorization" not in target_headers
 
 
 async def test_client_proxy_auth_keeps_explicit_proxy_authorization_header() -> None:
@@ -296,10 +304,8 @@ async def test_client_proxy_auth_keeps_explicit_mixed_proxy_headers() -> None:
 
     assert result == {"ok": True}
     proxy_headers = client.seen["proxy_headers"]
-    headers = client.seen["headers"]
     assert proxy_headers["Proxy-Authorization"] == auth.encode()
-    assert proxy_headers["Authorization"] == "Bearer origin"
-    assert headers["Proxy-Authorization"] == auth.encode()
+    assert "Authorization" not in proxy_headers
 
 
 async def test_client_proxy_auth_keeps_explicit_request_proxy_authorization() -> None:

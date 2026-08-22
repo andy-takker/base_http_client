@@ -1,4 +1,5 @@
 import asyncio
+import warnings
 from collections.abc import AsyncIterable, Mapping, Sequence
 from dataclasses import replace
 from typing import Any, NoReturn
@@ -11,11 +12,11 @@ from aiohttp import (
     ClientResponse,
     ClientSession,
     ServerDisconnectedError,
-    encode_basic_auth,
 )
 from aiohttp.client import DEFAULT_TIMEOUT
 from multidict import CIMultiDict
 from yarl import URL
+
 
 from asyncly.client.handlers.base import (
     ResponseHandlersType,
@@ -30,6 +31,12 @@ from asyncly.client.retry import (
 )
 from asyncly.client.timeout import TimeoutType, get_timeout
 from asyncly.client.typing import MethodType
+
+
+def _encode_basic_auth(login: str, password: str, encoding: str) -> str:
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        return BasicAuth(login, password, encoding).encode()
 
 
 class BaseHttpClient:
@@ -263,7 +270,7 @@ def _normalize_auth_kwargs(
             raise TypeError("auth must be an aiohttp.BasicAuth")
         headers = CIMultiDict(kwargs.get("headers") or {})
         if not any(key.lower() == "authorization" for key in headers):
-            headers["Authorization"] = encode_basic_auth(
+            headers["Authorization"] = _encode_basic_auth(
                 auth.login, auth.password, auth.encoding
             )
         kwargs["headers"] = headers
@@ -275,36 +282,36 @@ def _normalize_auth_kwargs(
         raise TypeError("proxy_auth must be an aiohttp.BasicAuth")
     proxy_headers = CIMultiDict(kwargs.get("proxy_headers") or {})
     if any(key.lower() == "proxy-authorization" for key in proxy_headers):
+        for key in list(proxy_headers):
+            if key.lower() == "authorization":
+                del proxy_headers[key]
         kwargs["proxy_headers"] = proxy_headers
-        _add_plain_http_proxy_auth_header(kwargs, url=url)
+        _add_proxy_auth_middleware(kwargs)
         return
-    encoded = encode_basic_auth(
+    encoded = _encode_basic_auth(
         proxy_auth.login, proxy_auth.password, proxy_auth.encoding
     )
     proxy_headers["Proxy-Authorization"] = encoded
     kwargs["proxy_headers"] = proxy_headers
-    _add_plain_http_proxy_auth_header(kwargs, url=url)
+    _add_proxy_auth_middleware(kwargs)
 
 
-def _add_plain_http_proxy_auth_header(kwargs: dict[str, Any], *, url: URL) -> None:
-    if url.scheme != "http" or kwargs.get("proxy") is None:
-        return
-    headers = CIMultiDict(kwargs.get("headers") or {})
-    if any(key.lower() == "proxy-authorization" for key in headers):
-        kwargs["headers"] = headers
-        return
-    proxy_headers = kwargs.get("proxy_headers") or {}
-    proxy_authorization = None
-    for key, value in proxy_headers.items():
-        if key.lower() == "proxy-authorization":
-            proxy_authorization = value
-            break
-    if proxy_authorization is None:
-        return
-    # aiohttp 3.14 drops proxy_headers for plain HTTP proxies; this reaches
-    # the proxy without affecting HTTPS CONNECT tunnels.
-    headers["Proxy-Authorization"] = proxy_authorization
-    kwargs["headers"] = headers
+def _add_proxy_auth_middleware(kwargs: dict[str, Any]) -> None:
+    middlewares = kwargs.get("middlewares") or ()
+    kwargs["middlewares"] = (_forward_plain_http_proxy_auth, *middlewares)
+
+
+async def _forward_plain_http_proxy_auth(
+    request: ClientRequest, handler: ClientHandlerType
+) -> ClientResponse:
+    if request.url.scheme == "http" and request.proxy is not None:
+        proxy_headers: Mapping[str, str] = request.proxy_headers or {}
+        proxy_authorization = proxy_headers.get("Proxy-Authorization")
+        if proxy_authorization is not None and not any(
+            key.lower() == "proxy-authorization" for key in request.headers
+        ):
+            request.headers["Proxy-Authorization"] = proxy_authorization
+    return await handler(request)
 
 
 class _ObservableTransportError(Exception):
