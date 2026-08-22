@@ -89,7 +89,7 @@ include = ["asyncly"]
 include = ["asyncly"]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling<1.32"]
 build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]

@@ -1,4 +1,5 @@
 import asyncio
+import warnings
 from collections.abc import AsyncIterable, Mapping, Sequence
 from dataclasses import replace
 from typing import Any, NoReturn
@@ -13,6 +14,7 @@ from aiohttp import (
     ServerDisconnectedError,
 )
 from aiohttp.client import DEFAULT_TIMEOUT
+from multidict import CIMultiDict
 from yarl import URL
 
 from asyncly.client.handlers.base import (
@@ -28,6 +30,12 @@ from asyncly.client.retry import (
 )
 from asyncly.client.timeout import TimeoutType, get_timeout
 from asyncly.client.typing import MethodType
+
+
+def _encode_basic_auth(login: str, password: str, encoding: str) -> str:
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        return BasicAuth(login, password, encoding).encode()
 
 
 class BaseHttpClient:
@@ -118,7 +126,8 @@ class BaseHttpClient:
             operation: Logical operation label used by instrumented clients.
             **kwargs: Extra arguments forwarded to `ClientSession.request`
                 (e.g. ``json``, ``params``, ``headers``). Instance-level
-                ``proxy`` / ``proxy_auth`` are injected here unless overridden.
+                ``proxy`` is injected unless overridden. ``proxy_auth`` is
+                normalized into ``proxy_headers`` before the request is made.
 
         Returns:
             Whatever the matched handler returns.
@@ -128,8 +137,8 @@ class BaseHttpClient:
         """
         if "proxy" not in kwargs and self._proxy is not None:
             kwargs["proxy"] = self._proxy
-        if "proxy_auth" not in kwargs and self._proxy_auth is not None:
-            kwargs["proxy_auth"] = self._proxy_auth
+
+        _normalize_auth_kwargs(kwargs, self._proxy_auth, url=url)
 
         if retry is None:
             return await self._request_once(
@@ -249,6 +258,74 @@ class BaseHttpClient:
                 response=response,
                 client_name=self._client_name,
             )
+
+
+def _normalize_auth_kwargs(
+    kwargs: dict[str, Any], default_proxy_auth: BasicAuth | None, *, url: URL
+) -> None:
+    auth = kwargs.pop("auth", None)
+    if auth is not None:
+        if not isinstance(auth, BasicAuth):
+            raise TypeError("auth must be an aiohttp.BasicAuth")
+        headers = CIMultiDict(kwargs.get("headers") or {})
+        if not any(key.lower() == "authorization" for key in headers):
+            headers["Authorization"] = _encode_basic_auth(
+                auth.login, auth.password, auth.encoding
+            )
+        kwargs["headers"] = headers
+
+    proxy_auth = kwargs.pop("proxy_auth", default_proxy_auth)
+    if proxy_auth is not None and not isinstance(proxy_auth, BasicAuth):
+        raise TypeError("proxy_auth must be an aiohttp.BasicAuth")
+    request_headers = CIMultiDict(kwargs.get("headers") or {})
+    explicit_proxy_authorization = next(
+        (
+            value
+            for key, value in request_headers.items()
+            if key.lower() == "proxy-authorization"
+        ),
+        None,
+    )
+    if proxy_auth is None and explicit_proxy_authorization is None:
+        return
+    proxy_headers = CIMultiDict(kwargs.get("proxy_headers") or {})
+    if explicit_proxy_authorization is not None:
+        proxy_headers["Proxy-Authorization"] = explicit_proxy_authorization
+        proxy_headers.popall("Authorization", None)
+        kwargs["proxy_headers"] = proxy_headers
+        _add_proxy_auth_middleware(kwargs)
+        return
+    if any(key.lower() == "proxy-authorization" for key in proxy_headers):
+        proxy_headers.popall("Authorization", None)
+        kwargs["proxy_headers"] = proxy_headers
+        _add_proxy_auth_middleware(kwargs)
+        return
+    if proxy_auth is None:
+        return
+    encoded = _encode_basic_auth(
+        proxy_auth.login, proxy_auth.password, proxy_auth.encoding
+    )
+    proxy_headers["Proxy-Authorization"] = encoded
+    kwargs["proxy_headers"] = proxy_headers
+    _add_proxy_auth_middleware(kwargs)
+
+
+def _add_proxy_auth_middleware(kwargs: dict[str, Any]) -> None:
+    middlewares = kwargs.get("middlewares") or ()
+    kwargs["middlewares"] = (_forward_plain_http_proxy_auth, *middlewares)
+
+
+async def _forward_plain_http_proxy_auth(
+    request: ClientRequest, handler: ClientHandlerType
+) -> ClientResponse:
+    if request.url.scheme == "http" and request.proxy is not None:
+        proxy_headers: Mapping[str, str] = request.proxy_headers or {}
+        proxy_authorization = proxy_headers.get("Proxy-Authorization")
+        if proxy_authorization is not None and not any(
+            key.lower() == "proxy-authorization" for key in request.headers
+        ):
+            request.headers["Proxy-Authorization"] = proxy_authorization
+    return await handler(request)
 
 
 class _ObservableTransportError(Exception):
