@@ -1,3 +1,4 @@
+import warnings
 from http import HTTPStatus
 from types import MappingProxyType
 
@@ -119,6 +120,125 @@ async def test_client_proxy_auth_constructor_arg() -> None:
                     proxy_auth=auth,
                 )
                 result = await client.fetch()
+
+    assert result == {"ok": True}
+    proxy.assert_called(
+        times=1,
+        headers={"Proxy-Authorization": auth.encode()},
+    )
+
+
+async def test_client_auth_uses_authorization_header() -> None:
+    auth = BasicAuth("user", "secret")
+    routes = [MockRoute("GET", "/x", "ok")]
+    async with start_service(routes) as target:
+        target.register("ok", JsonResponse({"ok": True}))
+        async with ClientSession() as session:
+            client = _Client(url=target.url, session=session, client_name="test")
+            result = await client._make_req(
+                method=hdrs.METH_GET,
+                url=target.url / "x",
+                handlers=_Client.HANDLERS,
+                auth=auth,
+            )
+
+    assert result == {"ok": True}
+    target.assert_called(
+        "ok",
+        times=1,
+        headers={"Authorization": auth.encode()},
+    )
+
+
+async def test_client_auth_keeps_explicit_authorization_header() -> None:
+    auth = BasicAuth("user", "secret")
+    routes = [MockRoute("GET", "/x", "ok")]
+    async with start_service(routes) as target:
+        target.register("ok", JsonResponse({"ok": True}))
+        async with ClientSession() as session:
+            client = _Client(url=target.url, session=session, client_name="test")
+            result = await client._make_req(
+                method=hdrs.METH_GET,
+                url=target.url / "x",
+                handlers=_Client.HANDLERS,
+                auth=auth,
+                headers={"Authorization": "Bearer explicit"},
+            )
+
+    assert result == {"ok": True}
+    target.assert_called(
+        "ok",
+        times=1,
+        headers={"Authorization": "Bearer explicit"},
+    )
+
+
+async def test_client_proxy_auth_constructor_is_warning_free() -> None:
+    auth = BasicAuth("user", "secret")
+    routes = [MockRoute("GET", "/x", "ok")]
+    async with start_service(routes) as target:
+        target.register("ok", JsonResponse({"ok": True}))
+        async with start_proxy(auth=auth) as proxy:
+            async with ClientSession() as session:
+                client = _Client(
+                    url=target.url,
+                    session=session,
+                    client_name="test",
+                    proxy=proxy.url,
+                    proxy_auth=auth,
+                )
+                with warnings.catch_warnings(record=True) as caught:
+                    warnings.simplefilter("always")
+                    result = await client.fetch()
+
+    assert result == {"ok": True}
+    assert not [
+        warning
+        for warning in caught
+        if issubclass(warning.category, DeprecationWarning)
+        and "auth" in str(warning.message)
+    ]
+
+
+async def test_client_proxy_auth_per_request_is_forwarded() -> None:
+    auth = BasicAuth("user", "secret")
+    routes = [MockRoute("GET", "/x", "ok")]
+    async with start_service(routes) as target:
+        target.register("ok", JsonResponse({"ok": True}))
+        async with start_proxy(auth=auth) as proxy:
+            async with ClientSession() as session:
+                client = _Client(url=target.url, session=session, client_name="test")
+                result = await client._make_req(
+                    method=hdrs.METH_GET,
+                    url=target.url / "x",
+                    handlers=_Client.HANDLERS,
+                    proxy=proxy.url,
+                    proxy_auth=auth,
+                )
+
+    assert result == {"ok": True}
+    proxy.assert_called(
+        times=1,
+        headers={"Proxy-Authorization": auth.encode()},
+    )
+
+
+async def test_client_proxy_auth_keeps_explicit_proxy_authorization_header() -> None:
+    auth = BasicAuth("user", "secret")
+    routes = [MockRoute("GET", "/x", "ok")]
+    async with start_service(routes) as target:
+        target.register("ok", JsonResponse({"ok": True}))
+        async with start_proxy(auth=auth) as proxy:
+            async with ClientSession() as session:
+                client = _Client(url=target.url, session=session, client_name="test")
+                result = await client._make_req(
+                    method=hdrs.METH_GET,
+                    url=target.url / "x",
+                    handlers=_Client.HANDLERS,
+                    proxy=proxy.url,
+                    proxy_auth=BasicAuth("wrong", "wrong"),
+                    proxy_headers={"Proxy-Authorization": auth.encode()},
+                )
 
     assert result == {"ok": True}
     proxy.assert_called(

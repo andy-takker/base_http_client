@@ -11,6 +11,7 @@ from aiohttp import (
     ClientResponse,
     ClientSession,
     ServerDisconnectedError,
+    encode_basic_auth,
 )
 from aiohttp.client import DEFAULT_TIMEOUT
 from yarl import URL
@@ -126,10 +127,10 @@ class BaseHttpClient:
         Raises:
             UnhandledStatusException: If no handler matches the response status.
         """
+        _normalize_auth_kwargs(kwargs, self._proxy_auth)
+
         if "proxy" not in kwargs and self._proxy is not None:
             kwargs["proxy"] = self._proxy
-        if "proxy_auth" not in kwargs and self._proxy_auth is not None:
-            kwargs["proxy_auth"] = self._proxy_auth
 
         if retry is None:
             return await self._request_once(
@@ -249,6 +250,47 @@ class BaseHttpClient:
                 response=response,
                 client_name=self._client_name,
             )
+
+
+def _normalize_auth_kwargs(
+    kwargs: dict[str, Any], default_proxy_auth: BasicAuth | None
+) -> None:
+    auth = kwargs.pop("auth", None)
+    if auth is not None:
+        if not isinstance(auth, BasicAuth):
+            raise TypeError("auth must be an aiohttp.BasicAuth")
+        headers = dict(kwargs.get("headers") or {})
+        if not any(key.lower() == "authorization" for key in headers):
+            headers["Authorization"] = encode_basic_auth(
+                auth.login, auth.password, auth.encoding
+            )
+        kwargs["headers"] = headers
+
+    proxy_auth = kwargs.pop("proxy_auth", default_proxy_auth)
+    if proxy_auth is None:
+        return
+    if not isinstance(proxy_auth, BasicAuth):
+        raise TypeError("proxy_auth must be an aiohttp.BasicAuth")
+    proxy_headers = dict(kwargs.get("proxy_headers") or {})
+    if any(key.lower() == "proxy-authorization" for key in proxy_headers):
+        _copy_proxy_authorization_for_aiohttp(proxy_headers)
+        kwargs["proxy_headers"] = proxy_headers
+        return
+    encoded = encode_basic_auth(
+        proxy_auth.login, proxy_auth.password, proxy_auth.encoding
+    )
+    proxy_headers["Proxy-Authorization"] = encoded
+    _copy_proxy_authorization_for_aiohttp(proxy_headers)
+    kwargs["proxy_headers"] = proxy_headers
+
+
+def _copy_proxy_authorization_for_aiohttp(headers: dict[str, str]) -> None:
+    if any(key.lower() == "authorization" for key in headers):
+        return
+    for key, value in headers.items():
+        if key.lower() == "proxy-authorization":
+            headers["Authorization"] = value
+            return
 
 
 class _ObservableTransportError(Exception):
