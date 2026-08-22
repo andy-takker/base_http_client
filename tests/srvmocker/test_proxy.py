@@ -223,6 +223,24 @@ async def test_client_proxy_auth_per_request_is_forwarded() -> None:
     )
 
 
+async def test_client_proxy_auth_is_not_sent_as_origin_authorization() -> None:
+    auth = BasicAuth("user", "secret")
+    routes = [MockRoute("GET", "/x", "ok")]
+    async with start_service(routes) as target:
+        target.register("ok", JsonResponse({"ok": True}))
+        async with ClientSession() as session:
+            client = _Client(url=target.url, session=session, client_name="test")
+            result = await client._make_req(
+                method=hdrs.METH_GET,
+                url=target.url / "x",
+                handlers=_Client.HANDLERS,
+                proxy_auth=auth,
+            )
+
+    assert result == {"ok": True}
+    assert "Authorization" not in target.last_call("ok").headers
+
+
 async def test_client_proxy_auth_keeps_explicit_proxy_authorization_header() -> None:
     auth = BasicAuth("user", "secret")
     routes = [MockRoute("GET", "/x", "ok")]
@@ -245,6 +263,65 @@ async def test_client_proxy_auth_keeps_explicit_proxy_authorization_header() -> 
         times=1,
         headers={"Proxy-Authorization": auth.encode()},
     )
+
+
+async def test_client_proxy_auth_keeps_explicit_mixed_proxy_headers() -> None:
+    auth = BasicAuth("user", "secret")
+    routes = [MockRoute("GET", "/x", "ok")]
+    async with start_service(routes) as target:
+        target.register("ok", JsonResponse({"ok": True}))
+        async with start_proxy(auth=auth) as proxy:
+            async with ClientSession() as session:
+                client = _Client(url=target.url, session=session, client_name="test")
+                result = await client._make_req(
+                    method=hdrs.METH_GET,
+                    url=target.url / "x",
+                    handlers=_Client.HANDLERS,
+                    proxy=proxy.url,
+                    proxy_auth=BasicAuth("wrong", "wrong"),
+                    proxy_headers={
+                        "Proxy-Authorization": auth.encode(),
+                        "Authorization": "Bearer origin",
+                    },
+                )
+
+    assert result == {"ok": True}
+    proxy.assert_called(
+        times=1,
+        headers={"Proxy-Authorization": auth.encode()},
+    )
+
+
+async def test_client_auth_rejects_non_basic_auth() -> None:
+    async with ClientSession() as session:
+        client = _Client(
+            url="http://127.0.0.1/",
+            session=session,
+            client_name="test",
+        )
+        with pytest.raises(TypeError, match="auth must be an aiohttp.BasicAuth"):
+            await client._make_req(
+                method=hdrs.METH_GET,
+                url=client.url / "x",
+                handlers=_Client.HANDLERS,
+                auth=object(),
+            )
+
+
+async def test_client_proxy_auth_rejects_non_basic_auth() -> None:
+    async with ClientSession() as session:
+        client = _Client(
+            url="http://127.0.0.1/",
+            session=session,
+            client_name="test",
+        )
+        with pytest.raises(TypeError, match="proxy_auth must be an aiohttp.BasicAuth"):
+            await client._make_req(
+                method=hdrs.METH_GET,
+                url=client.url / "x",
+                handlers=_Client.HANDLERS,
+                proxy_auth=object(),
+            )
 
 
 async def test_proxy_auth_missing_returns_407() -> None:
