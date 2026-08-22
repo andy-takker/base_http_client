@@ -1902,15 +1902,7 @@ per request by passing <code>proxy=</code> to <code>_make_req</code>.</p>
 
                   <details class="mkdocstrings-source">
                     <summary>Source code in <code>asyncly/client/base.py</code></summary>
-                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-63">63</a></span>
-<span class="normal"><a href="#__codelineno-0-64">64</a></span>
-<span class="normal"><a href="#__codelineno-0-65">65</a></span>
-<span class="normal"><a href="#__codelineno-0-66">66</a></span>
-<span class="normal"><a href="#__codelineno-0-67">67</a></span>
-<span class="normal"><a href="#__codelineno-0-68">68</a></span>
-<span class="normal"><a href="#__codelineno-0-69">69</a></span>
-<span class="normal"><a href="#__codelineno-0-70">70</a></span>
-<span class="normal"><a href="#__codelineno-0-71">71</a></span>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-71">71</a></span>
 <span class="normal"><a href="#__codelineno-0-72">72</a></span>
 <span class="normal"><a href="#__codelineno-0-73">73</a></span>
 <span class="normal"><a href="#__codelineno-0-74">74</a></span>
@@ -1926,31 +1918,39 @@ per request by passing <code>proxy=</code> to <code>_make_req</code>.</p>
 <span class="normal"><a href="#__codelineno-0-84">84</a></span>
 <span class="normal"><a href="#__codelineno-0-85">85</a></span>
 <span class="normal"><a href="#__codelineno-0-86">86</a></span>
-<span class="normal"><a href="#__codelineno-0-87">87</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-63" name="__codelineno-0-63"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-<a id="__codelineno-0-64" name="__codelineno-0-64"></a>    <span class="bp">self</span><span class="p">,</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65"></a>    <span class="n">url</span><span class="p">:</span> <span class="n">URL</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span>
-<a id="__codelineno-0-66" name="__codelineno-0-66"></a>    <span class="n">session</span><span class="p">:</span> <span class="n">ClientSession</span><span class="p">,</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="n">client_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="o">*</span><span class="p">,</span>
-<a id="__codelineno-0-69" name="__codelineno-0-69"></a>    <span class="n">proxy</span><span class="p">:</span> <span class="n">URL</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70"></a>    <span class="n">proxy_auth</span><span class="p">:</span> <span class="n">BasicAuth</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-72" name="__codelineno-0-72"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize the client.</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73"></a>
-<a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="sd">    Args:</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="sd">        url: Base URL the client&#39;s endpoints are resolved against.</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="sd">        session: The `aiohttp.ClientSession` to issue requests with. The</span>
-<a id="__codelineno-0-77" name="__codelineno-0-77"></a><span class="sd">            caller owns its lifecycle.</span>
-<a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="sd">        client_name: Identifier used in metrics labels and error messages.</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="sd">        proxy: Default proxy URL for every request. Can be overridden</span>
-<a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="sd">            per request by passing `proxy=` to `_make_req`.</span>
-<a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="sd">        proxy_auth: Default `BasicAuth` credentials for the proxy.</span>
-<a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_url</span> <span class="o">=</span> <span class="n">url</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">URL</span><span class="p">)</span> <span class="k">else</span> <span class="n">URL</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">session</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_client_name</span> <span class="o">=</span> <span class="n">client_name</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_proxy</span> <span class="o">=</span> <span class="n">URL</span><span class="p">(</span><span class="n">proxy</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">proxy</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">proxy</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_proxy_auth</span> <span class="o">=</span> <span class="n">proxy_auth</span>
+<span class="normal"><a href="#__codelineno-0-87">87</a></span>
+<span class="normal"><a href="#__codelineno-0-88">88</a></span>
+<span class="normal"><a href="#__codelineno-0-89">89</a></span>
+<span class="normal"><a href="#__codelineno-0-90">90</a></span>
+<span class="normal"><a href="#__codelineno-0-91">91</a></span>
+<span class="normal"><a href="#__codelineno-0-92">92</a></span>
+<span class="normal"><a href="#__codelineno-0-93">93</a></span>
+<span class="normal"><a href="#__codelineno-0-94">94</a></span>
+<span class="normal"><a href="#__codelineno-0-95">95</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="n">url</span><span class="p">:</span> <span class="n">URL</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74"></a>    <span class="n">session</span><span class="p">:</span> <span class="n">ClientSession</span><span class="p">,</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="n">client_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="o">*</span><span class="p">,</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="n">proxy</span><span class="p">:</span> <span class="n">URL</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="n">proxy_auth</span><span class="p">:</span> <span class="n">BasicAuth</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize the client.</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81"></a>
+<a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83"></a><span class="sd">        url: Base URL the client&#39;s endpoints are resolved against.</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84"></a><span class="sd">        session: The `aiohttp.ClientSession` to issue requests with. The</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="sd">            caller owns its lifecycle.</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86"></a><span class="sd">        client_name: Identifier used in metrics labels and error messages.</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="sd">        proxy: Default proxy URL for every request. Can be overridden</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88"></a><span class="sd">            per request by passing `proxy=` to `_make_req`.</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89"></a><span class="sd">        proxy_auth: Default `BasicAuth` credentials for the proxy.</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_url</span> <span class="o">=</span> <span class="n">url</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">URL</span><span class="p">)</span> <span class="k">else</span> <span class="n">URL</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">session</span>
+<a id="__codelineno-0-93" name="__codelineno-0-93"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_client_name</span> <span class="o">=</span> <span class="n">client_name</span>
+<a id="__codelineno-0-94" name="__codelineno-0-94"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_proxy</span> <span class="o">=</span> <span class="n">URL</span><span class="p">(</span><span class="n">proxy</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">proxy</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">proxy</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_proxy_auth</span> <span class="o">=</span> <span class="n">proxy_auth</span>
 </code></pre></div></td></tr></table></div>
                   </details>
 
